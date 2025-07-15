@@ -9,14 +9,14 @@ import AdminDashboard from './Home/AdminDashboard';
 import Photographers from './Photographer/Photographers';
 import Users from './Admin/Users';
 import Addservese from './Photographer/Addservese';
-
+import PhotographerProfile from './Photographer/PhotographerProfile';
 
 const AppWrapper = () => {
   const location = useLocation();
 
   const [activeTab, setActiveTab] = useState('Home'); 
 
-  const hideNavRoutes = ['/admin', '/register', '/log', '/photographer-dashboard','/photografers'];
+  const hideNavRoutes = ['/admin', '/register', '/log', '/photographer-dashboard','/photografers','/photographer/:id' ];
   const shouldShowNav = !hideNavRoutes.includes(location.pathname);
 
   return (
@@ -34,6 +34,7 @@ const AppWrapper = () => {
               <Route path="/photografers" element={<Photographers />} />
                  <Route path="/users" element={<Users />} />
                      <Route path="/servese" element={<Addservese  />} />
+                       <Route path="/photographer/:id" element={<PhotographerProfile />} />
       </Routes>
     </>
   );

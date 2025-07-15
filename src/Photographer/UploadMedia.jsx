@@ -6,7 +6,7 @@ import {
 const UploadMedia = () => {
   const [mediaType, setMediaType] = useState('photo');
   const [title, setTitle] = useState('');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // ✅ changed to array
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -14,22 +14,24 @@ const UploadMedia = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file || !title) {
+    if (!files.length || !title) {
       setMessage('Please fill in all required fields.');
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', file);
     formData.append('title', title);
     formData.append('description', description);
     formData.append('mediaType', mediaType);
+
+    files.forEach((file) => {
+      formData.append('files', file); // ✅ send multiple files
+    });
 
     try {
       setLoading(true);
       setMessage('');
 
-      // ✅ Get token from localStorage (or from your context if you're using one)
       const token = localStorage.getItem('token');
 
       const response = await fetch('https://localhost:7037/api/Photographer/upload-media', {
@@ -45,7 +47,7 @@ const UploadMedia = () => {
         setMessage('✅ Uploaded successfully!');
         setTitle('');
         setDescription('');
-        setFile(null);
+        setFiles([]);
       } else {
         setMessage(result.message || '❌ Upload failed. Please try again.');
       }
@@ -71,7 +73,6 @@ const UploadMedia = () => {
         <Sparkles className="absolute bottom-1/4 left-1/3 w-5 h-5 text-blue-300 opacity-60 animate-bounce delay-2000" />
       </div>
 
-      {/* Main content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
         <div className="bg-gray-800/40 backdrop-blur-md rounded-2xl shadow-xl border border-purple-600/30 w-full max-w-2xl p-8">
 
@@ -157,19 +158,24 @@ const UploadMedia = () => {
             <div>
               <label className="text-sm font-medium mb-1 flex items-center gap-2">
                 <Camera className="w-4 h-4 text-purple-400" />
-                Upload File
+                Upload Files
               </label>
               <input
                 type="file"
+                multiple
                 accept={mediaType === 'photo' ? 'image/*' : 'video/*'}
-                onChange={(e) => setFile(e.target.files[0])}
+                onChange={(e) => setFiles([...e.target.files])}
                 className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-white file:bg-gradient-to-r file:from-yellow-400 file:to-pink-400 file:text-white file:rounded file:px-4 file:py-2 file:cursor-pointer hover:file:from-yellow-500 hover:file:to-pink-500"
               />
-              {file && (
-                <div className="mt-2 text-sm text-gray-400 flex items-center gap-2">
-                  {mediaType === 'photo' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
-                  {file.name}
-                </div>
+              {files.length > 0 && (
+                <ul className="mt-2 text-sm text-gray-400 space-y-1">
+                  {files.map((f, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      {mediaType === 'photo' ? <Image className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                      {f.name}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
@@ -198,7 +204,7 @@ const UploadMedia = () => {
             </button>
           </form>
 
-          {/* Tips section */}
+          {/* Tips */}
           <div className="mt-8 bg-purple-900/30 backdrop-blur-md rounded-xl p-6 border border-purple-600/30">
             <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-yellow-300">
               <Sparkles className="w-5 h-5" />

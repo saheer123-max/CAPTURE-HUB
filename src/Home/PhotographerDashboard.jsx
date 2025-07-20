@@ -1,9 +1,11 @@
+
 // PhotographerDashboard.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Addservese from '../Photographer/Addservese';
 import AvailableDates from '../Photographer/AvailableDates';
 import UploadMedia from '../Photographer/UploadMedia';
+import Booking from '../Photographer/Boking';
 import {
   Camera,
   Image,
@@ -101,25 +103,8 @@ const PhotographerDashboard = () => {
   return <Addservese />;
 
       case 'Bookings':
-        return (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Booking Requests</h2>
-            <div className="space-y-4">
-              {[1, 2].map((id) => (
-                <div key={id} className="bg-gray-800 p-4 rounded-lg flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold">Customer {id}</h3>
-                    <p className="text-gray-400">Date: 2024-12-20 | Service: Wedding Shoot</p>
-                  </div>
-                  <div className="space-x-2">
-                    <button className="bg-green-600 px-4 py-1 rounded-full">Accept</button>
-                    <button className="bg-red-600 px-4 py-1 rounded-full">Reject</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        return <Booking/>
+          
 
       case 'Messages':
         return (

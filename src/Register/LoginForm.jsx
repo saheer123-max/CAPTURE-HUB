@@ -94,18 +94,12 @@ const LoginForm = () => {
         throw new Error(result.message || result);
       }
 
-      localStorage.setItem('token', result.data.token); 
+localStorage.setItem('token', result.data.token); 
 
-      setToast({ message: '✅ Login successful!', type: 'success' });
-      setTimeout(() => setToast({ message: '', type: '' }), 3000);
-const roleMap = {
-  "1": "photographer",
-  "2": "customer"
-  
-};
+setToast({ message: '✅ Login successful!', type: 'success' });
+setTimeout(() => setToast({ message: '', type: '' }), 3000);
 
-
-const userRole = roleMap[result.data.role?.toString()] || 'customer';
+const userRole = result.data.role?.toLowerCase(); // <- FIXED
 
 if (userRole === 'photographer') {
   navigate('/photographer-dashboard');
@@ -116,6 +110,7 @@ if (userRole === 'photographer') {
 } else {
   navigate('/');
 }
+
     } catch (error) {
       setErrors({ general: error.message || 'Login failed. Please try again.' });
       setToast({ message: error.message || 'Login failed!', type: 'error' });

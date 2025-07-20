@@ -25,7 +25,7 @@ const Nav = ({ activeTab, setActiveTab, gems }) => {
       bgColor: 'bg-gradient-to-br from-pink-500 to-pink-600'
     },
     {
-      name: 'About us',
+      name: 'meseage',
       hasNotification: false,
       icon: Users,
       color: 'from-purple-500 to-purple-600',

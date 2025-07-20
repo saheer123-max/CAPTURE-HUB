@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; 
 import {
   User, TrendingUp, Award, Target, X, Camera, MapPin, Mail
 } from 'lucide-react';
@@ -12,7 +13,7 @@ const PhotographerProfile = () => {
   const [profile, setProfile] = useState(null);
   const [media, setMedia] = useState([]);
   const [showMedia, setShowMedia] = useState(false);
-
+ const navigate = useNavigate();
   // ✅ Media Fetch function (only on click)
   const fetchMedia = () => {
     const token = localStorage.getItem('token');
@@ -30,25 +31,32 @@ const PhotographerProfile = () => {
       });
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  console.log("📦 token", token); // Check this
 
-    // Fetch profile only
-    axios.get(`https://localhost:7037/api/Photographer/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  // ✅ axios.get + then + catch എല്ലാം chaining ആണാകേണ്ടത്
+  axios.get(`https://localhost:7037/api/Photographer/by-user/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => {
+      if (res.data.success) {
+        console.log("📄 Profile from backend:", res.data.data);
+
+        setProfile(res.data.data);
+      } else {
+        alert(res.data.message || 'Profile load ചെയ്യാൻ കഴിഞ്ഞില്ല');
+      }
     })
-      .then((res) => {
-        if (res.data.success) {
-          setProfile(res.data.data);
-        } else {
-          alert(res.data.message || 'Profile load ചെയ്യാൻ കഴിഞ്ഞില്ല');
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching profile:', err.message);
-        alert('Photographer Profile ലോഡ് ചെയ്യാൻ പറ്റിയില്ല.');
-      });
-  }, [id]);
+    .catch((err) => {
+      console.error('Error fetching profile:', err.message);
+      alert('Photographer Profile ലോഡ് ചെയ്യാൻ പറ്റിയില്ല.');
+    });
+
+}, [id]);
+
 
   if (!profile) {
     return (
@@ -193,7 +201,9 @@ const PhotographerProfile = () => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer">
+            <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer"
+              onClick={() => navigate(`/book/${profile.userId}`)} >
+              
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-white" />

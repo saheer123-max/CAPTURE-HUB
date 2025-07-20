@@ -102,7 +102,7 @@ const Home = () => {
 
 
       <div id="About us" className="p-10 scroll-section text-white">
-        <h2 className="text-3xl font-bold mb-4">About Us</h2>
+        <h2 className="text-3xl font-bold mb-4">messege</h2>
         <p>We connect photographers and clients through a creative virtual platform.</p>
       </div>
 

@@ -28,12 +28,12 @@ const AvailableDates = () => {
     
     const days = [];
     
-    // Add empty cells for days before the first day of the month
+
     for (let i = 0; i < firstDayWeekday; i++) {
       days.push(null);
     }
     
-    // Add all days of the month
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }

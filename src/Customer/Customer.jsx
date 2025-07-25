@@ -1,42 +1,47 @@
+// CustomerStatus.jsx
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { useGlobalContext } from '../Context/GlobalContext';
+import * as signalR from '@microsoft/signalr';
 
 function Customer() {
   const location = useLocation();
   const bookingId = location.state?.bookingId;
   const initialStatus = location.state?.bookingStatus || 'Pending';
 
-  const { backendUrl, token } = useGlobalContext();
   const [status, setStatus] = useState(initialStatus);
+  const token = localStorage.getItem('token');
+  const backendUrl = 'https://localhost:7037';
 
-  // 🔁 Booking status regular check cheyyunnu
   useEffect(() => {
-    const fetchBookingStatus = () => {
-      if (bookingId) {
-        axios
-          .get(`${backendUrl}/api/booking/${bookingId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((res) => {
-            setStatus(res.data.status); // ⏫ backend booking status
-          })
-          .catch((err) => {
-            console.error('❌ Booking status fetch failed:', err);
-          });
+   
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`${backendUrl}/bookinghub`) 
+      .withAutomaticReconnect()
+      .build();
+
+    connection.start()
+      .then(() => {
+        console.log("🔗 SignalR connected");
+
+        connection.invoke("SubscribeToBooking", bookingId);
+      })
+      .catch(err => console.error('SignalR connection error:', err));
+
+   
+    connection.on("ReceiveBookingStatusUpdate", (updatedBookingId, newStatus) => {
+      if (updatedBookingId === bookingId) {
+        setStatus(newStatus);
+        console.log("🔄 Real-time status updated:", newStatus);
       }
+    });
+
+    return () => {
+     
+      connection.stop();
     };
+  }, [bookingId]);
 
-    // 🔁 5 second interval
-    const interval = setInterval(fetchBookingStatus, 5000);
-    fetchBookingStatus(); // immediate first call
-    return () => clearInterval(interval); // cleanup
-  }, [bookingId, backendUrl, token]);
-
-  // 🌈 Text color change based on status
   const getStatusStyle = () => {
     switch (status) {
       case 'Accepted':

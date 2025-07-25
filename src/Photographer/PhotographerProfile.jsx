@@ -35,7 +35,7 @@ useEffect(() => {
   const token = localStorage.getItem('token');
   console.log("📦 token", token); // Check this
 
-  // ✅ axios.get + then + catch എല്ലാം chaining ആണാകേണ്ടത്
+
   axios.get(`https://localhost:7037/api/Photographer/by-user/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -61,7 +61,7 @@ useEffect(() => {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-xl">Profile ലൊഡ് ചെയ്യുന്നു...</div>
+        <div className="text-white text-xl">Profile Loading</div>
       </div>
     );
   }
@@ -70,20 +70,13 @@ useEffect(() => {
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-            <span className="text-black font-bold text-sm">25</span>
-          </div>
+         
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-              <Camera className="w-3 h-3 text-white" />
-            </div>
-            <span className="text-white font-semibold">78,581</span>
+          
+         
           </div>
         </div>
-        <div className="text-white">
-          <span className="text-gray-300">Capacity: </span>
-          <span className="font-semibold">97/500</span>
-        </div>
+      
       </div>
 
       <h1 className="text-4xl font-bold text-yellow-400 mb-8">Photographers</h1>
@@ -102,8 +95,7 @@ useEffect(() => {
             <div className="relative">
               <div className="w-64 h-80 bg-gradient-to-br from-purple-600 to-blue-700 rounded-lg shadow-xl relative overflow-hidden">
                 <div className="absolute top-4 left-4 text-white">
-                  <div className="text-3xl font-bold">95</div>
-                  <div className="text-sm font-semibold">PRO</div>
+              
                 </div>
                 <div className="absolute top-4 right-4 w-10 h-10 bg-white rounded-sm flex items-center justify-center">
                   <MapPin className="w-5 h-5 text-gray-600" />
@@ -222,7 +214,7 @@ useEffect(() => {
               </div>
             )}
 
-            {/* ✅ Media Gallery */}
+           
             {showMedia && (
               <div className="bg-gray-50 rounded-lg p-4 mt-4">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Photos & Videos</h3>
@@ -251,7 +243,8 @@ useEffect(() => {
                               onError={(e) => console.error(`❌ Video failed to load: ${mediaUrl}`)}
                             >
                               <source src={mediaUrl} type="video/mp4" />
-                              നിങ്ങളുടെ ബ്രൗസർ ഈ വീഡിയോ പിന്തുണയ്ക്കുന്നില്ല.
+                            Your browser does not support this video.
+
                             </video>
                           )}
                         </div>

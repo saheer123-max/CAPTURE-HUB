@@ -1,38 +1,73 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import './calendarStyles.css'; 
 import { useGlobalContext } from '../Context/GlobalContext';
 
 const PhotographerBooking = () => {
   const { id: photographerId } = useParams();
   const { token, backendUrl } = useGlobalContext();
-  const navigate = useNavigate(); // Added for navigation
+  const navigate = useNavigate();
 
   const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
   const [eventType, setEventType] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [approvedDates, setApprovedDates] = useState([]); 
+
+
+  useEffect(() => {
+    const fetchApproved = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/api/booking/approved/${photographerId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success) {
+          const allDates = [];
+          data.data.forEach((booking) => {
+            const start = new Date(booking.startDate);
+            const end = new Date(booking.endDate);
+            for (
+              let date = new Date(start);
+              date <= end;
+              date.setDate(date.getDate() + 1)
+            ) {
+              allDates.push(new Date(date));
+            }
+          });
+          setApprovedDates(allDates);
+        }
+      } catch (error) {
+        console.error(' Approved booking fetch error:', error);
+      }
+    };
+    fetchApproved();
+  }, [photographerId, backendUrl, token]);
+
 
   const handleBooking = async () => {
     const [startDate, endDate] = selectedDates;
 
-    if (!eventType || !startDate || !endDate) {
-      alert('❌ എല്ലാ ആവശ്യമായ ഫീൽഡുകളും നിറക്കുക.');
-      return;
-    }
+  if (!eventType || !startDate || !endDate) {
+  alert(' Please fill in all required fields.');
+  return;
+}
 
-    if (startDate >= endDate || (endDate - startDate < 1000)) {
-      alert('❌ ശരിയായ തീയതി ശ്രേണി തിരഞ്ഞെടുക്കുക.');
-      return;
-    }
+if (startDate >= endDate || (endDate - startDate < 1000)) {
+  alert(' Please select a valid date range.');
+  return;
+}
 
-    if (!token) {
-      alert('❌ ദയവായി ലോഗിൻ ചെയ്യുക.');
-      return;
-    }
+if (!token) {
+  alert(' Please log in.');
+  return;
+}
 
-    // ✅ 🔽 Fetch user from localStorage
+
     const storedUser = localStorage.getItem('user');
     let customerName = '';
     if (storedUser) {
@@ -44,17 +79,21 @@ const PhotographerBooking = () => {
       }
     }
 
+    const adjustedStart = new Date(startDate);
+    adjustedStart.setHours(12, 0, 0, 0);
+
+    const adjustedEnd = new Date(endDate);
+    adjustedEnd.setHours(23, 59, 59, 999);
+
     const payload = {
       photographerId: parseInt(photographerId),
       eventType,
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
+      startDate: adjustedStart.toISOString(),
+      endDate: adjustedEnd.toISOString(),
       message,
       status: 'Pending',
       customerName,
     };
-
-    console.log('Request Payload:', payload);
 
     setLoading(true);
 
@@ -70,44 +109,51 @@ const PhotographerBooking = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Server Error Response:', errorData);
-        alert(`❌ ${errorData.message || 'സെർവർ പിഴവ്'}`);
+        alert(`❌ ${errorData.message || 'Server Erorr'}`);
         return;
       }
 
-      const data = await response.json();
-      console.log('Response Data:', data);
+ const data = await response.json();
+if (data.success) {
+  alert(`✅ ${data.message || 'Booking sent successfully!'}`);
+  setMessage('');
+  setEventType('');
+  navigate('/customer', { state: { bookingStatus: 'Pending' } });
+} else {
+  alert(` ${data.message || 'Booking failed'}`);
+}
+} catch (err) {
+  console.error(' Booking Error:', err);
+  alert(' Network error.');
+} finally {
+  setLoading(false);
+}
 
-      if (data.success) {
-        alert(`✅ ${data.message || 'ബുക്കിംഗ് വിജയകരമായി അയച്ചു!'}`);
-        setMessage('');
-        setEventType('');
-        // Navigate to Customer component with bookingStatus
-        navigate('/customer', { state: { bookingStatus: 'Pending' } });
-      } else {
-        alert(`❌ ${data.message || 'ബുക്കിംഗ് പരാജയപ്പെട്ടു'}`);
+  };
+
+  // ✅ Highlight approved dates
+  const tileClassName = ({ date, view }) => {
+    if (view === 'month') {
+      const dateStr = date.toDateString();
+      if (approvedDates.some((d) => d.toDateString() === dateStr)) {
+        return 'approved-date';
       }
-    } catch (err) {
-      console.error('Booking Error:', err);
-      alert('❌ നെറ്റ്‌വർക്ക് പിഴവ്.');
-    } finally {
-      setLoading(false);
     }
+    return null;
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-md mx-auto bg-white shadow-lg p-6 rounded-lg">
-        <h2 className="text-2xl font-bold mb-4 text-blue-600">📅 ബുക്കിംഗ് റേഞ്ച് തിരഞ്ഞെടുക്കുക</h2>
+      <h2 className="text-2xl font-bold mb-4 text-blue-600">📅 Select Booking Range</h2>
+
 
         <Calendar
-          onChange={(dates) => {
-            console.log('📅 Selected Dates:', dates);
-            setSelectedDates(dates);
-          }}
+          onChange={(dates) => setSelectedDates(dates)}
           value={selectedDates}
           selectRange={true}
           minDate={new Date()}
+          tileClassName={tileClassName} 
         />
 
         <select
@@ -116,16 +162,18 @@ const PhotographerBooking = () => {
           onChange={(e) => setEventType(e.target.value)}
           required
         >
-          <option value="">ഇവന്റ് തരം തിരഞ്ഞെടുക്കുക</option>
-          <option value="Wedding">വിവാഹം</option>
-          <option value="Birthday">ജന്മദിനം</option>
-          <option value="Engagement">നിശ്ചയം</option>
-          <option value="Other">മറ്റുള്ളവ</option>
+      <option value="">Select Event Type</option>
+<option value="Wedding">Wedding</option>
+<option value="Birthday">Birthday</option>
+<option value="Engagement">Engagement</option>
+<option value="Other">Other</option>
+
         </select>
 
         <textarea
           className="w-full mt-4 border p-2 rounded"
-          placeholder="ബുക്കിംഗ് വിവരങ്ങൾ ചേർക്കുക..."
+          placeholder="Booking details..."
+
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
@@ -136,7 +184,8 @@ const PhotographerBooking = () => {
           onClick={handleBooking}
           disabled={loading || !eventType || !message}
         >
-          {loading ? 'അയയ്ക്കുന്നു...' : 'ഇപ്പോൾ ബുക്ക് ചെയ്യുക'}
+       {loading ? 'Sending...' : 'Book Now'}
+
         </button>
       </div>
     </div>

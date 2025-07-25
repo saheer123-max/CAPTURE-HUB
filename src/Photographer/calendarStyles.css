@@ -1,0 +1,6 @@
+/* calendarStyles.css */
+.approved-date {
+  background-color: #f87171 !important; /* Tailwind red-400 */
+  color: white !important;
+  border-radius: 50%;
+}

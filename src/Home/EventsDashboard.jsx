@@ -65,7 +65,7 @@ const EventsDashboard = () => {
     <div className="min-h-screen bg-black p-6">
       <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
+      
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-2">Events</h1>
           <p className="text-blue-200">Choose your perfect event experience</p>

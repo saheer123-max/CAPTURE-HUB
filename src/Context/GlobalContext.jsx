@@ -7,7 +7,7 @@ export const GlobalProvider = ({ children }) => {
 
   const backendUrl = "https://localhost:7037";
 
-  // ✅ token browser reload ചെയ്‌താലും context-ൽ വീണ്ടും ലോഡ് ചെയ്യുന്നു
+
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) {

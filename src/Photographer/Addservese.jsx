@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode'; 
 import {
   AlertCircle,
   CheckCircle,
@@ -30,6 +31,7 @@ const AddService = () => {
   const [contactNumber, setContactNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [photographerProfileId, setPhotographerProfileId] = useState(null);
 
   const serviceTypes = [
     { value: 'wedding', label: '💒 Wedding Photography' },
@@ -42,31 +44,78 @@ const AddService = () => {
     { value: 'maternity', label: '🤱 Maternity Shoot' }
   ];
 
+  // Decode JWT token to get photographerProfileId
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    console.log("TOKEN:", token);
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+     
+        
+        const id = decoded.photographerId || decoded.id || decoded.sub; // Adjust based on your token's claim name
+        setPhotographerProfileId(id);
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setMessage({ type: 'error', text: 'Invalid token. Please login again.' });
+      }
+    } else {
+      setMessage({ type: 'error', text: 'Unauthorized. Please login first.' });
+    }
+  }, []);
+
   const handleSubmit = async () => {
     setLoading(true);
     setMessage({ type: '', text: '' });
 
-    const payload = {
-      serviceName,
-      description,
-      serviceType,
-      baseCost: parseInt(baseCost),
-      extraHourCost: parseInt(extraHourCost),
-      minimumAmount: parseInt(minimumAmount),
-      contactNumber,
-      isAvailable,
-      videographyPrice: additionalServices.videography.selected ? parseInt(additionalServices.videography.price) : 0,
-      editingPrice: additionalServices.editing.selected ? parseInt(additionalServices.editing.price) : 0,
-      droneShotPrice: additionalServices.droneShot.selected ? parseInt(additionalServices.droneShot.price) : 0,
-      liveStreamPrice: additionalServices.liveStream.selected ? parseInt(additionalServices.liveStream.price) : 0,
-      photographerProfileId: 3 // ✅ Use correct ID from your backend DB
-    };
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMessage({ type: 'error', text: 'Unauthorized. Please login first.' });
+      setLoading(false);
+      return;
+    }
+
+    if (!photographerProfileId) {
+      setMessage({ type: 'error', text: 'Photographer ID not found. Please login again.' });
+      setLoading(false);
+      return;
+    }
+
+   const payload = {
+  serviceName,
+  description,
+  serviceType,
+  baseCost: parseInt(baseCost),
+  extraHourCost: parseInt(extraHourCost),
+  minimumAmount: parseInt(minimumAmount),
+  contactNumber,
+  isAvailable,
+  videographyPrice: additionalServices.videography.selected
+    ? parseInt(additionalServices.videography.price || '0')
+    : 0,
+  editingPrice: additionalServices.editing.selected
+    ? parseInt(additionalServices.editing.price || '0')
+    : 0,
+  droneShotPrice: additionalServices.droneShot.selected
+    ? parseInt(additionalServices.droneShot.price || '0')
+    : 0,
+  liveStreamPrice: additionalServices.liveStream.selected
+    ? parseInt(additionalServices.liveStream.price || '0')
+    : 0,
+  photographerProfileId: parseInt(photographerProfileId) 
+};
+
+
+console.log("📦 Payload before sending:", payload);
+console.log(payload, typeof payload.photographerProfileId);
+
 
     try {
       const response = await fetch('https://localhost:7037/api/Photographer/add-service', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
@@ -75,7 +124,6 @@ const AddService = () => {
 
       if (response.ok && data.success) {
         setMessage({ type: 'success', text: data.message || 'Service added successfully!' });
-
         setServiceName('');
         setDescription('');
         setServiceType('');
@@ -127,13 +175,13 @@ const AddService = () => {
       )}
 
       <div className="space-y-6">
-        {/* Service Name & Type */}
+ 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <Type size={16} /> Service Name
             </label>
-            <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Premium Wedding Package"
               value={serviceName}
               onChange={(e) => setServiceName(e.target.value)}
@@ -144,7 +192,7 @@ const AddService = () => {
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
               <Star size={16} /> Service Type
             </label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={serviceType}
               onChange={(e) => setServiceType(e.target.value)}
               required disabled={loading}>
@@ -158,19 +206,19 @@ const AddService = () => {
           </div>
         </div>
 
-        {/* Description */}
+
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
             <FileText size={16} /> Description
           </label>
           <textarea rows={4} placeholder="Service details"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 resize-none"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 resize-none text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required disabled={loading} />
         </div>
 
-        {/* Cost Inputs */}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <InputField label="Base Cost (4 Hrs)" icon={<DollarSign size={16} />}
             value={baseCost} onChange={e => setBaseCost(formatPrice(e.target.value))} loading={loading} />
@@ -180,7 +228,7 @@ const AddService = () => {
             value={minimumAmount} onChange={e => setMinimumAmount(formatPrice(e.target.value))} loading={loading} />
         </div>
 
-        {/* Additional Services */}
+  
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
             <Package size={16} /> Additional Services (Optional)
@@ -197,7 +245,7 @@ const AddService = () => {
                     }))}
                     disabled={loading}
                     className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-700">{key}</span>
+                  <span className="text-sm text-gray-700 capitalize">{key.replace('Shot', ' Shot').replace('Stream', ' Stream')}</span>
                 </label>
                 {additionalServices[key].selected && (
                   <input type="number"
@@ -207,7 +255,7 @@ const AddService = () => {
                       ...prev,
                       [key]: { ...prev[key], price: formatPrice(e.target.value) }
                     }))}
-                    className="ml-6 mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                    className="ml-6 mt-1 w-full border border-gray-300 rounded px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     disabled={loading} min="0" />
                 )}
               </div>
@@ -215,7 +263,7 @@ const AddService = () => {
           </div>
         </div>
 
-        {/* Contact & Availability */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Contact Number" icon={<Phone size={16} />}
             type="tel" value={contactNumber} onChange={handleContactChange} loading={loading} maxLength="10" />
@@ -228,19 +276,19 @@ const AddService = () => {
                 <input type="radio" name="availability" checked={isAvailable}
                   onChange={() => setIsAvailable(true)} disabled={loading}
                   className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-gray-700">✅ Available</span>
+                <span className="text-sm text-gray-700"> Available</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="radio" name="availability" checked={!isAvailable}
                   onChange={() => setIsAvailable(false)} disabled={loading}
                   className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-gray-700">❌ Not Available</span>
+                <span className="text-sm text-gray-700"> Not Available</span>
               </label>
             </div>
           </div>
         </div>
 
-        {/* Submit Button */}
+
         <button type="button" onClick={handleSubmit} disabled={loading}
           className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
             loading ? 'bg-gray-400 text-gray-200 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -267,7 +315,7 @@ const InputField = ({ label, icon, type = 'number', value, onChange, loading, ma
       {icon} {label}
     </label>
     <input type={type}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       value={value}
       onChange={onChange}
       required disabled={loading} maxLength={maxLength} />

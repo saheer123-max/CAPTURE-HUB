@@ -1,5 +1,5 @@
   import React, { useState } from 'react';
-  import { useNavigate } from 'react-router-dom'; // Added for navigation
+  import { useNavigate } from 'react-router-dom'; 
   import { 
     Users, 
     Camera, 
@@ -24,13 +24,13 @@
     Bell,
     Menu,
     X,
-    LogOut // Added logout icon
+    LogOut 
   } from 'lucide-react';
 
   const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('Dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const navigate = useNavigate(); // Initialize navigate function
+    const navigate = useNavigate(); 
 
 
     const handleLogout = () => {

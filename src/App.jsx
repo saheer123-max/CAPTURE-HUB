@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, matchPath } from 'react-router-dom';
+
 import Home from './Home/Home';
 import Nav from './Nave/Nave';
 import RegisterForm from './Register/RegisterForm';
@@ -12,17 +13,18 @@ import Addservese from './Photographer/Addservese';
 import PhotographerProfile from './Photographer/PhotographerProfile';
 import PhotographerBooking from './Photographer/PhotographerBooking';
 import Customer from './Customer/Customer';
-
-// ✅ GlobalProvider import ചെയ്യുക
 import { GlobalProvider } from "./Context/GlobalContext";
-// path ശരിയാക്കണം
+
 
 const AppWrapper = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Home');
 
-  const hideNavRoutes = ['/admin', '/register', '/log', '/photographer-dashboard', '/photografers', '/photographer/:id'];
-  const shouldShowNav = !hideNavRoutes.includes(location.pathname);
+  const hideNavRoutes = ['/admin', '/register', '/log', '/photographer-dashboard', '/photografers', '/photographer/:id',"/book/:id","/Customer" ];
+const shouldShowNav = !hideNavRoutes.some((route) =>
+  matchPath(route, location.pathname)
+);
+
 
   return (
     <>
@@ -47,7 +49,7 @@ const AppWrapper = () => {
 
 const App = () => {
   return (
-    <GlobalProvider> {/* ✅ Context wrap */}
+    <GlobalProvider> 
       <Router>
         <AppWrapper />
       </Router>

@@ -117,7 +117,7 @@ const PhotographerCarousel = () => {
   return (
     <div className="w-full mx-auto p-8 bg-black">
       <div className="relative h-100 rounded-3xl overflow-hidden">
-        {/* Slides container */}
+  
         <div className="relative w-full h-full">
           {slides.map((slide, index) => (
             <div
@@ -178,7 +178,7 @@ const PhotographerCarousel = () => {
   <button
     id="view-all-photographers"
     onClick={() => {
-      const token = localStorage.getItem('token'); // ✅ updated to match your login
+      const token = localStorage.getItem('token'); 
       if (token) {
         navigate('/photografers');
       } else {

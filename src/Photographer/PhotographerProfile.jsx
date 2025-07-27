@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
+import { useGlobalContext } from "../Context/GlobalContext"; 
+
 import {
   User, TrendingUp, Award, Target, X, Camera, MapPin, Mail
 } from 'lucide-react';
@@ -9,6 +11,8 @@ import {
 const backendUrl = import.meta.env.VITE_API_URL
 
 const PhotographerProfile = () => {
+  const { setTargetUser } = useGlobalContext();
+  
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [media, setMedia] = useState([]);
@@ -30,6 +34,28 @@ const PhotographerProfile = () => {
         console.error('Error fetching media:', err.message);
       });
   };
+const handleChatClick = () => {
+  if (!profile?.id) {
+    console.warn("🚫 profile.id is missing");
+    return;
+  }
+
+  const target = {
+    id: profile.userId,
+    name: profile.name,
+    photoUrl: profile.photoUrl,
+    email: profile.email || '',
+  };
+
+  console.log("🎯 Target user to chat:", target);
+
+  // ❌ Removed localStorage
+  navigate("/chat", { state: { targetUser: target } }); // ✅ Only pass via route state
+};
+
+
+
+
 
 useEffect(() => {
   const token = localStorage.getItem('token');
@@ -156,7 +182,7 @@ useEffect(() => {
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div onClick={handleChatClick}>
                   <h3 className="text-lg font-semibold text-blue-600">Chat</h3>
                   <p className="text-gray-600">View detailed photographer information</p>
                 </div>

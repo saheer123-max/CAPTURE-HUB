@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, matchPath } from 'react-router-dom';
-
 import Home from './Home/Home';
 import Nav from './Nave/Nave';
 import RegisterForm from './Register/RegisterForm';
@@ -14,6 +13,12 @@ import PhotographerProfile from './Photographer/PhotographerProfile';
 import PhotographerBooking from './Photographer/PhotographerBooking';
 import Customer from './Customer/Customer';
 import { GlobalProvider } from "./Context/GlobalContext";
+
+
+import Chat from './Customer/Chat';
+import CustomerChatReceiver from './Photographer/CustomerChatReceiver';
+
+import { useUser, UserProvider } from './Contexts/UserContext';
 
 
 const AppWrapper = () => {
@@ -42,6 +47,9 @@ const shouldShowNav = !hideNavRoutes.some((route) =>
         <Route path="/photographer/:id" element={<PhotographerProfile />} />
         <Route path="/book/:id" element={<PhotographerBooking />} />
          <Route path="/Customer" element={<Customer />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/CustomerChatReceiver" element={<CustomerChatReceiver />}/>
+      
       </Routes>
     </>
   );
@@ -49,11 +57,13 @@ const shouldShowNav = !hideNavRoutes.some((route) =>
 
 const App = () => {
   return (
-    <GlobalProvider> 
+      <UserProvider> 
+    <GlobalProvider>
       <Router>
         <AppWrapper />
       </Router>
-    </GlobalProvider>
+  </GlobalProvider>
+      </UserProvider> 
   );
 };
 

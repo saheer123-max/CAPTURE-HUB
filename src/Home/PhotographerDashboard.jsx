@@ -6,6 +6,9 @@ import Addservese from '../Photographer/Addservese';
 import AvailableDates from '../Photographer/AvailableDates';
 import UploadMedia from '../Photographer/UploadMedia';
 import Booking from '../Photographer/Boking';
+import { useUser, UserProvider } from '../Contexts/UserContext';
+
+import CustomerChatReceiver from '../Photographer/CustomerChatReceiver';
 import {
   Camera,
   Image,
@@ -20,6 +23,7 @@ import {
 } from 'lucide-react';
 
 
+
 const PhotographerDashboard = () => {
   const [activeTab, setActiveTab] = useState('Home');
   const navigate = useNavigate();
@@ -30,7 +34,7 @@ const PhotographerDashboard = () => {
 { name: 'Upload Media', icon: <Upload className="w-5 h-5" /> },
     { name: 'Services', icon: <Upload className="w-5 h-5" /> },
     { name: 'Bookings', icon: <Calendar className="w-5 h-5" /> },
-    { name: 'Messages', icon: <Users className="w-5 h-5" /> },
+    { name: 'CustomerChatReceiver', icon: <Users className="w-5 h-5" /> },
     { name: 'Reviews', icon: <Users className="w-5 h-5" /> },
    { name: 'Bio', icon: <Users className="w-5 h-5" /> },
    { name: 'Date', icon: <Import className="w-5 h-5" /> }
@@ -106,20 +110,12 @@ const PhotographerDashboard = () => {
         return <Booking/>
           
 
-      case 'Messages':
-        return (
-          <div>
-            <h2 className="text-3xl font-bold mb-4">Messages</h2>
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <p><strong>Customer 1:</strong> Hi, are you available on Jan 5th?</p>
-              <input
-                type="text"
-                placeholder="Reply..."
-                className="w-full mt-2 p-2 rounded bg-gray-700"
-              />
-            </div>
-          </div>
-        );
+      case 'CustomerChatReceiver':
+        return <CustomerChatReceiver
+
+        />
+       
+        
         case 'Date':
   return <AvailableDates />;
 

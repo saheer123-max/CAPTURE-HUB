@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Send } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
@@ -108,7 +109,12 @@ useEffect(() => {
       newConnection.stop();
     };
   }, [photographerId]);
-
+useEffect(() => {
+  if (targetUser?.id) {
+    setCustomerId(targetUser.id);
+    console.log("✅ Preloaded customerId from targetUser:", targetUser.id);
+  }
+}, [targetUser]);
   // 🔽 Auto scroll to last message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -12,7 +12,7 @@ import Addservese from './Photographer/Addservese';
 import PhotographerProfile from './Photographer/PhotographerProfile';
 import PhotographerBooking from './Photographer/PhotographerBooking';
 import Customer from './Customer/Customer';
-import { GlobalProvider } from "./Context/GlobalContext";
+import { GlobalProvider } from "./Globel/GlobalContext";
 
 
 import Chat from './Customer/Chat';
@@ -57,13 +57,15 @@ const shouldShowNav = !hideNavRoutes.some((route) =>
 
 const App = () => {
   return (
+     <GlobalProvider>
       <UserProvider> 
-    <GlobalProvider>
+   
       <Router>
         <AppWrapper />
       </Router>
-  </GlobalProvider>
+
       </UserProvider> 
+        </GlobalProvider>
   );
 };
 

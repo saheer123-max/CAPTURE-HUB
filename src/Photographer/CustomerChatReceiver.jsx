@@ -1,62 +1,78 @@
-// src/Photographer/CustomerChatReceiver.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Send } from 'lucide-react';
 import * as signalR from '@microsoft/signalr';
 import { jwtDecode } from 'jwt-decode';
-import { useUser } from '../Contexts/UserContext'; 
-import { useGlobalContext } from '../Context/GlobalContext';// ✅ Only use useUser, not UserProvider here
+import { useUser } from '../Contexts/UserContext';
+import { useGlobalContext } from '../Globel/GlobalContext';
 
-const CustomerChatReceiver = ({ customerName, customerId }) => {
-  const { currentUser } = useUser(); // ✅ using context
+const CustomerChatReceiver = () => {
+  const { currentUser } = useUser(); // 🔵 Photographer info context-ൽ നിന്ന്
+  const { targetUser } = useGlobalContext(); // 🟢 Customer info context-ൽ നിന്ന്
   const [photographerId, setPhotographerId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [connection, setConnection] = useState(null);
   const messagesEndRef = useRef(null);
-  const [targetUser, setTargetUser] = useState(null);
+  const [customerId, setCustomerId] = useState(null);
 
+ 
 
+useEffect(() => {
+  if (!photographerId) return;
 
-  useEffect(() => {
-  const storedTarget = localStorage.getItem("targetUser");
-  if (storedTarget) {
-    const parsed = JSON.parse(storedTarget);
-    setTargetUser(parsed);
-    console.log("✅ targetUser loaded from localStorage:", parsed);
-  } else {
-    console.warn("⛔ targetUser not found in localStorage");
-  }
-}, []);
+  const newConnection = new signalR.HubConnectionBuilder()
+    .withUrl('https://localhost:7037/chathub', {
+      accessTokenFactory: () => localStorage.getItem('token') || '',
+    })
+    .withAutomaticReconnect()
+    .build();
 
+  setConnection(newConnection);
 
-  useEffect(() => {
-  console.log("✅ currentUser:", currentUser);
-  console.log("✅ targetUser:", targetUser);
-}, [currentUser, targetUser]);
-  // ✅ Set photographerId from context.currentUser if available
+  newConnection.start().then(() => {
+    console.log('✅ Connected');
+
+    newConnection.on('ReceiveMessage', (senderId, message) => {
+      console.log('📨 Message received:', senderId, message);
+
+      // ✅ Store senderId as customerId
+      setCustomerId(senderId); // 👈 storing customerId
+
+      const newMsg = {
+        id: Date.now(),
+        text: message,
+        sender: 'customer',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages((prev) => [...prev, newMsg]);
+    });
+  });
+}, [photographerId]);
+
+  
+
+  // 🔁 Photographer ID set ചെയ്യുന്നു (context → fallback: token)
   useEffect(() => {
     if (currentUser?.id) {
       setPhotographerId(currentUser.id);
-      console.log("📸 Photographer ID from context:", currentUser.id);
     } else {
-      // fallback: extract from token
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (token) {
         const decoded = jwtDecode(token);
         const id = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
         setPhotographerId(id);
-        console.log("📸 Photographer ID from JWT fallback:", id);
       }
     }
   }, [currentUser]);
 
-  // ✅ Setup SignalR connection
+  // ✅ SignalR Hub connection & message receive handler
   useEffect(() => {
     if (!photographerId) return;
 
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl("https://localhost:7037/chathub", {
-        accessTokenFactory: () => localStorage.getItem("token") || ''
+      .withUrl('https://localhost:7037/chathub', {
+        accessTokenFactory: () => localStorage.getItem('token') || '',
       })
       .withAutomaticReconnect()
       .build();
@@ -66,52 +82,61 @@ const CustomerChatReceiver = ({ customerName, customerId }) => {
     newConnection
       .start()
       .then(() => {
-        console.log("✅ SignalR connected for photographer:", photographerId);
-newConnection.on("ReceiveMessage", (senderId, message) => {
-  const isCustomer = String(senderId) === String(customerId); // ✅ true ആണെങ്കിൽ customer
+        console.log('✅ SignalR connected as Photographer:', photographerId);
 
-  const newMsg = {
-    id: Date.now(),
-    text: message,
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    sender: isCustomer ? 'customer' : 'photographer' // ✅
-  };
+        newConnection.on('ReceiveMessage', (senderId, message) => {
+          console.log('📨 Message received:', senderId, message);
 
-  setMessages((prev) => [...prev, newMsg]);
-});
+          const isCustomer = String(senderId) !== String(photographerId);
 
+          const newMsg = {
+            id: `${Date.now()}-${Math.random()}`,
+            text: message,
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            sender: isCustomer ? 'customer' : 'photographer',
+          };
+
+          setMessages((prev) => [...prev, newMsg]);
+        });
       })
-      .catch((err) => console.error("❌ SignalR connection error:", err));
+      .catch((err) => console.error('❌ SignalR connection error:', err));
 
     return () => {
       newConnection.stop();
     };
   }, [photographerId]);
 
-  // ✅ Scroll to bottom
+  // 🔽 Auto scroll to last message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendReply = async () => {
-    if (!newMessage.trim() || !connection || !photographerId) return;
+  // ✉️ Message send function
+const sendReply = async () => {
+  if (!newMessage.trim() || !connection || !photographerId || !customerId) return;
 
-    try {
-      await connection.invoke("SendMessage", customerId.toString(), newMessage);
+  try {
+    await connection.invoke('SendMessage', customerId.toString(), newMessage); // ✅ use stored customerId
+    console.log('📤 Message sent to:', customerId);
 
-      const reply = {
-        id: Date.now(),
-        text: newMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        sender: 'photographer'
-      };
+    const reply = {
+      id: Date.now(),
+      text: newMessage,
+      sender: 'photographer',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
 
-      setMessages((prev) => [...prev, reply]);
-      setNewMessage('');
-    } catch (error) {
-      console.error("❌ Failed to send message:", error);
-    }
-  };
+    setMessages((prev) => [...prev, reply]);
+    setNewMessage('');
+  } catch (error) {
+    console.error('❌ Failed to send message:', error);
+  }
+};
+
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -129,7 +154,7 @@ newConnection.on("ReceiveMessage", (senderId, message) => {
             <User className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-white">{customerName || 'Customer'}</h3>
+            <h3 className="font-semibold text-white">{targetUser?.name || 'Customer'}</h3>
             <p className="text-sm text-green-400">● Online</p>
           </div>
         </div>
@@ -157,9 +182,11 @@ newConnection.on("ReceiveMessage", (senderId, message) => {
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
-                <p className={`text-xs mt-2 ${
-                  message.sender === 'customer' ? 'text-blue-100' : 'text-gray-500'
-                }`}>
+                <p
+                  className={`text-xs mt-2 ${
+                    message.sender === 'customer' ? 'text-blue-100' : 'text-gray-500'
+                  }`}
+                >
                   {message.timestamp}
                 </p>
               </div>

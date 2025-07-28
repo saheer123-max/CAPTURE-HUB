@@ -2,20 +2,55 @@
   import * as signalR from '@microsoft/signalr';
   import { jwtDecode } from "jwt-decode";
   import { useLocation } from 'react-router-dom';
-    
+    import { useGlobalContext } from "../Globel/GlobalContext";
+    import { HubConnectionBuilder } from '@microsoft/signalr';
+
   import { useUser } from "../Contexts/UserContext";
-  function Chat({ isCustomer }) {
-    
+  function Chat() {
+      const { currentUser,setCurrentUser } = useUser(); // ✅ get from context
+  const isCustomer = currentUser?.role === "customer";
+    const { targetUser, setTargetUser } = useGlobalContext();
     const [connection, setConnection] = useState(null);
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");
     const [isConnected, setIsConnected] = useState(false);
-  const { currentUser, setCurrentUser } = useUser();
-    const [targetUser, setTargetUser] = useState(null);
+
+  
     const messagesEndRef = useRef(null);
     const location = useLocation();
   
-  
+
+
+    
+    useEffect(() => {
+      const connectToHub = async () => {
+        const token = localStorage.getItem("token");
+    
+        const connection = new HubConnectionBuilder()
+          .withUrl("https://localhost:7037/chathub", {
+            accessTokenFactory: () => token,
+          })
+          .withAutomaticReconnect()
+          .build();
+    
+        connection.on("ReceiveMessage", (fromUserId, message) => {
+          console.log("📨 Message received from:", fromUserId, message);
+        });
+    
+        await connection.start();
+        console.log("✅ SignalR connected");
+    
+        // store connection in state or ref
+      };
+    
+      connectToHub();
+    }, []);
+  useEffect(() => {
+  if (location.state?.targetUser) {
+    setTargetUser(location.state.targetUser);
+    console.log("✅ Target User set from navigation:", location.state.targetUser);
+  }
+}, [location.state]);
 
     // ✅ Set targetUser from navigation
     useEffect(() => {
@@ -24,6 +59,17 @@
         console.log("✅ Target User set from navigation:", location.state.targetUser);
       }
     }, [location.state]);
+
+
+useEffect(() => {
+  const storedTarget = localStorage.getItem("targetUser");
+  if (storedTarget) {
+    const parsed = JSON.parse(storedTarget);
+    setTargetUser(parsed);
+  }
+}, []);
+
+
 
     // ✅ Set currentUser from token
     useEffect(() => {
@@ -82,7 +128,7 @@
               setIsConnected(true);
 
               newConnection.on("ReceiveMessage", (senderId, message) => {
-                if (senderId === targetUser.id) {
+                if (String(senderId) !== String(currentUser.id)) {
                   const msg = {
                     id: Date.now(),
                     text: message,
@@ -115,6 +161,7 @@
     }, [currentUser, targetUser]);
 
   const sendMessage = async () => {
+        console.log("👥 isCustomer:", isCustomer);
     if (
       connection &&
       connection.state === signalR.HubConnectionState.Connected &&
@@ -131,6 +178,8 @@
             minute: '2-digit'
           }),
           sender: isCustomer ? 'customer' : 'photographer'
+      
+
         };
 
         setMessages(prev => [...prev, reply]);

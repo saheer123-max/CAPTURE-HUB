@@ -45,29 +45,12 @@
     
       connectToHub();
     }, []);
-  useEffect(() => {
-  if (location.state?.targetUser) {
-    setTargetUser(location.state.targetUser);
-    console.log("✅ Target User set from navigation:", location.state.targetUser);
-  }
-}, [location.state]);
+
 
     // ✅ Set targetUser from navigation
-    useEffect(() => {
-      if (location.state?.targetUser) {
-        setTargetUser(location.state.targetUser);
-        console.log("✅ Target User set from navigation:", location.state.targetUser);
-      }
-    }, [location.state]);
 
 
-useEffect(() => {
-  const storedTarget = localStorage.getItem("targetUser");
-  if (storedTarget) {
-    const parsed = JSON.parse(storedTarget);
-    setTargetUser(parsed);
-  }
-}, []);
+
 
 
 
@@ -168,7 +151,9 @@ useEffect(() => {
       text.trim()
     ) {
       try {
-        await connection.invoke("SendMessage", targetUser.id.toString(), text); // ✅ correct usage
+    await connection.invoke("SendMessage", currentUser.id.toString(), targetUser.id.toString(), text);
+
+
 
         const reply = {
           id: Date.now(),
@@ -191,7 +176,12 @@ useEffect(() => {
       console.warn("❌ Connection not ready or message is empty.");
     }
   };
-
+useEffect(() => {
+  if (location.state?.targetUser) {
+    setTargetUser(location.state.targetUser);
+    console.log("🎯 Set targetUser from location.state →", location.state.targetUser);
+  }
+}, [location.state, setTargetUser]);
 
 
     const handleKeyPress = (e) => {
@@ -200,6 +190,31 @@ useEffect(() => {
         sendMessage();
       }
     };
+
+
+
+    const handleChatClick = () => {
+  if (!profile?.userId) {
+    console.warn("🚫 profile.userId is missing");
+    return;
+  }
+
+  const target = {
+    id: profile.userId,       // ✅ backend-ൽ നിന്നുള്ള actual user ID
+    name: profile.name,
+    photoUrl: profile.photoUrl,
+    email: profile.email || '',
+  };
+
+  console.log("🎯 Target user to chat:", target);
+
+  navigate("/chat", { state: { targetUser: target } }); // ✅ passing the user from API
+};
+useEffect(() => {
+  console.log("📩 Received via navigation:", location.state?.targetUser);
+}, [location.state])
+console.log("👤 currentUser ID:", currentUser?.id);
+console.log("🎯 targetUser ID:", targetUser?.id);
 
     return (
       <div className="flex flex-col h-96 max-w-md mx-auto bg-white rounded-lg shadow-lg border border-gray-200">

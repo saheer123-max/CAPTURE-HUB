@@ -1,21 +1,36 @@
-  import React, { useState, useEffect, useRef } from 'react';
-  import { User, Send } from 'lucide-react';
-  import * as signalR from '@microsoft/signalr';
-  import { jwtDecode } from 'jwt-decode';
-
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Send } from 'lucide-react';
+import * as signalR from '@microsoft/signalr';
+import { jwtDecode } from 'jwt-decode';
 import { useGlobalContext } from '../Context/GlobalContext';
-  const CustomerChatReceiver = () => {
-     // 🔵 Photographer info context-ൽ നിന്ന്
-    const { targetUser,currentUser} = useGlobalContext(); // 🟢 Customer info context-ൽ നിന്ന്
-    const [photographerId, setPhotographerId] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [connection, setConnection] = useState(null);
-    const messagesEndRef = useRef(null);
-    const [customerId, setCustomerId] = useState(null);
 
-  
+const CustomerChatReceiver = () => {
+  const { currentUser, targetUser, setTargetUser } = useGlobalContext();
+  const [photographerId, setPhotographerId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [connection, setConnection] = useState(null);
+  const [customerId, setCustomerId] = useState(null);
+  const [allMessages, setAllMessages] = useState({});
+  const [customers, setCustomers] = useState([]);
+  const messagesEndRef = useRef(null);
 
+  // Set photographer ID from token
+  useEffect(() => {
+    if (currentUser?.id) {
+      setPhotographerId(currentUser.id);
+    } else {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const decoded = jwtDecode(token);
+        setPhotographerId(
+          decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+        );
+      }
+    }
+  }, [currentUser]);
+
+  // Setup SignalR
   useEffect(() => {
     if (!photographerId) return;
 
@@ -29,13 +44,10 @@ import { useGlobalContext } from '../Context/GlobalContext';
     setConnection(newConnection);
 
     newConnection.start().then(() => {
-      console.log('✅ Connected');
+      console.log('✅ Connected to SignalR');
 
       newConnection.on('ReceiveMessage', (senderId, message) => {
-        console.log('📨 Message received:', senderId, message);
-
-        // ✅ Store senderId as customerId
-        setCustomerId(senderId); // 👈 storing customerId
+        console.log('📨 Message received from:', senderId, message);
 
         const newMsg = {
           id: Date.now(),
@@ -44,52 +56,52 @@ import { useGlobalContext } from '../Context/GlobalContext';
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
-        setMessages((prev) => [...prev, newMsg]);
+        // Save to allMessages
+        setAllMessages((prev) => ({
+          ...prev,
+          [senderId]: [...(prev[senderId] || []), newMsg],
+        }));
+
+        // Add to customer list if not exists
+        setCustomers((prev) => {
+          const exists = prev.some((c) => c.id === senderId);
+          if (!exists) {
+            return [...prev, { id: senderId, name: `Customer ${senderId}` }];
+          }
+          return prev;
+        });
+
+        // If viewing same customer, update messages
+        if (senderId === customerId) {
+          setMessages((prev) => [...prev, newMsg]);
+        }
       });
     });
-  }, [photographerId]);
 
-    
+    return () => {
+      newConnection.stop();
+    };
+  }, [photographerId, customerId]);
 
-    // 🔁 Photographer ID set ചെയ്യുന്നു (context → fallback: token)
-    useEffect(() => {
-      if (currentUser?.id) {
-        setPhotographerId(currentUser.id);
-      } else {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const decoded = jwtDecode(token);
-          const id = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-          setPhotographerId(id);
-        }
-      }
-    }, [currentUser]);
-
-   
-
+  // When targetUser changes, show their messages
   useEffect(() => {
     if (targetUser?.id) {
       setCustomerId(targetUser.id);
-      console.log("✅ Preloaded customerId from targetUser:", targetUser.id);
+      setMessages(allMessages[targetUser.id] || []);
     }
-  }, [targetUser]);
-    // 🔽 Auto scroll to last message
-    useEffect(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+  }, [targetUser, allMessages]);
 
-    // ✉️ Message send function
+  // Send reply
   const sendReply = async () => {
     if (!newMessage.trim() || !connection || !photographerId || !customerId) return;
 
     try {
       await connection.invoke(
-  "SendMessage",
-  photographerId.toString(),   // fromUserId
-  customerId.toString(),       // toUserId
-  newMessage                   // message
-);// ✅ use stored customerId
-      console.log('📤 Message sent to:', customerId);
+        'SendMessage',
+        photographerId.toString(),
+        customerId.toString(),
+        newMessage
+      );
 
       const reply = {
         id: Date.now(),
@@ -98,6 +110,11 @@ import { useGlobalContext } from '../Context/GlobalContext';
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
+      setAllMessages((prev) => ({
+        ...prev,
+        [customerId]: [...(prev[customerId] || []), reply],
+      }));
+
       setMessages((prev) => [...prev, reply]);
       setNewMessage('');
     } catch (error) {
@@ -105,17 +122,45 @@ import { useGlobalContext } from '../Context/GlobalContext';
     }
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendReply();
+    }
+  };
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendReply();
-      }
-    };
+  return (
+    <div className="flex h-[90vh] border border-gray-700 rounded-xl overflow-hidden">
+      {/* Sidebar – Customer List */}
+      <div className="w-1/4 bg-gray-900 border-r border-gray-700 overflow-y-auto">
+        <h2 className="text-white text-lg font-bold p-4 border-b border-gray-700">📋 Customers</h2>
+        {customers.length === 0 ? (
+          <p className="text-gray-400 text-center p-4">No customers yet</p>
+        ) : (
+          customers.map((customer) => (
+            <div
+              key={customer.id}
+              onClick={() => {
+                setCustomerId(customer.id);
+                setTargetUser(customer);
+                setMessages(allMessages[customer.id] || []);
+              }}
+              className={`cursor-pointer p-3 text-white border-b border-gray-800 hover:bg-gray-800 ${
+                customerId === customer.id ? 'bg-gray-800' : ''
+              }`}
+            >
+              {customer.name}
+            </div>
+          ))
+        )}
+      </div>
 
-    return (
-      <div className="bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-700 overflow-hidden">
+      {/* Chat Section */}
+      <div className="w-3/4 bg-gray-800 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-700 bg-gray-800/70">
           <div className="flex items-center space-x-3">
@@ -123,45 +168,39 @@ import { useGlobalContext } from '../Context/GlobalContext';
               <User className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">{targetUser?.name || 'Customer'}</h3>
+              <h3 className="font-semibold text-white">
+                {targetUser?.name || 'Select a Customer'}
+              </h3>
               <p className="text-sm text-green-400">● Online</p>
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-900/30">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-400 text-center">
-                {photographerId} നിന്നുള്ള സന്ദേശങ്ങൾ ഇവിടെ പ്രത്യക്ഷപ്പെടും
-              </p>
-            </div>
-          ) : (
-            messages.map((message) => (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900/30">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.sender === 'customer' ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                key={message.id}
-                className={`flex ${message.sender === 'customer' ? 'justify-end' : 'justify-start'}`}
+                className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-lg ${
+                  message.sender === 'customer'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
+                    : 'bg-white text-gray-800 rounded-bl-md border border-gray-200'
+                }`}
               >
-                <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-lg ${
-                    message.sender === 'customer'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
-                      : 'bg-white text-gray-800 rounded-bl-md border border-gray-200'
+                <p className="text-sm leading-relaxed">{message.text}</p>
+                <p
+                  className={`text-xs mt-2 ${
+                    message.sender === 'customer' ? 'text-blue-100' : 'text-gray-500'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{message.text}</p>
-                  <p
-                    className={`text-xs mt-2 ${
-                      message.sender === 'customer' ? 'text-blue-100' : 'text-gray-500'
-                    }`}
-                  >
-                    {message.timestamp}
-                  </p>
-                </div>
+                  {message.timestamp}
+                </p>
               </div>
-            ))
-          )}
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
@@ -186,7 +225,8 @@ import { useGlobalContext } from '../Context/GlobalContext';
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export default CustomerChatReceiver;
+export default CustomerChatReceiver;

@@ -12,13 +12,12 @@ import Addservese from './Photographer/Addservese';
 import PhotographerProfile from './Photographer/PhotographerProfile';
 import PhotographerBooking from './Photographer/PhotographerBooking';
 import Customer from './Customer/Customer';
-import { GlobalProvider } from "./Globel/GlobalContext";
+import { GlobalProvider } from "./Context/GlobalContext";
 
 
 import Chat from './Customer/Chat';
 import CustomerChatReceiver from './Photographer/CustomerChatReceiver';
 
-import { useUser, UserProvider } from './Contexts/UserContext';
 
 
 const AppWrapper = () => {
@@ -58,13 +57,13 @@ const shouldShowNav = !hideNavRoutes.some((route) =>
 const App = () => {
   return (
      <GlobalProvider>
-      <UserProvider> 
+  
    
       <Router>
         <AppWrapper />
       </Router>
 
-      </UserProvider> 
+
         </GlobalProvider>
   );
 };

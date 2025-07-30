@@ -2,12 +2,11 @@
   import { User, Send } from 'lucide-react';
   import * as signalR from '@microsoft/signalr';
   import { jwtDecode } from 'jwt-decode';
-  import { useUser } from '../Contexts/UserContext';
-  import { useGlobalContext } from '../Globel/GlobalContext';
 
+import { useGlobalContext } from '../Context/GlobalContext';
   const CustomerChatReceiver = () => {
-    const { currentUser } = useUser(); // 🔵 Photographer info context-ൽ നിന്ന്
-    const { targetUser } = useGlobalContext(); // 🟢 Customer info context-ൽ നിന്ന്
+     // 🔵 Photographer info context-ൽ നിന്ന്
+    const { targetUser,currentUser} = useGlobalContext(); // 🟢 Customer info context-ൽ നിന്ന്
     const [photographerId, setPhotographerId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');

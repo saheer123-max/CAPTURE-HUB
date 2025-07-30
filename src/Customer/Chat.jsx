@@ -2,14 +2,16 @@
   import * as signalR from '@microsoft/signalr';
   import { jwtDecode } from "jwt-decode";
   import { useLocation } from 'react-router-dom';
-    import { useGlobalContext } from "../Globel/GlobalContext";
+
     import { HubConnectionBuilder } from '@microsoft/signalr';
 
-  import { useUser } from "../Contexts/UserContext";
+import { useGlobalContext } from "../Context/GlobalContext";
+
   function Chat() {
-      const { currentUser,setCurrentUser } = useUser(); // ✅ get from context
+     const { currentUser, setCurrentUser,targetUser, setTargetUser } = useGlobalContext(); 
+
   const isCustomer = currentUser?.role === "customer";
-    const { targetUser, setTargetUser } = useGlobalContext();
+
     const [connection, setConnection] = useState(null);
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState("");

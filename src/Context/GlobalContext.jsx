@@ -5,7 +5,7 @@ export const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
   const [token, setToken] = useState("");
-  const [currentUser, setCurrentUser] = useState(null); // ✅ New state
+  const [currentUser, setCurrentUser] = useState(null);// ✅ New state
   const [targetUser, setTargetUser] = useState(null);   // ✅ New state
 
   const backendUrl = "https://localhost:7037";

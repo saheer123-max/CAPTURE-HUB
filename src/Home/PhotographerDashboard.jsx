@@ -6,7 +6,7 @@ import Addservese from '../Photographer/Addservese';
 import AvailableDates from '../Photographer/AvailableDates';
 import UploadMedia from '../Photographer/UploadMedia';
 import Booking from '../Photographer/Boking';
-import { useUser, UserProvider } from '../Contexts/UserContext';
+
 
 import CustomerChatReceiver from '../Photographer/CustomerChatReceiver';
 import {

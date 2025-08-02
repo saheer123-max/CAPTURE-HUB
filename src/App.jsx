@@ -13,10 +13,11 @@ import PhotographerProfile from './Photographer/PhotographerProfile';
 import PhotographerBooking from './Photographer/PhotographerBooking';
 import Customer from './Customer/Customer';
 import { GlobalProvider } from "./Context/GlobalContext";
-
+import Payment from './Customer/Payment';
 
 import Chat from './Customer/Chat';
 import CustomerChatReceiver from './Photographer/CustomerChatReceiver';
+import PaymentForm from './Customer/PaymentForm';
 
 
 
@@ -45,9 +46,10 @@ const shouldShowNav = !hideNavRoutes.some((route) =>
         <Route path="/servese" element={<Addservese />} />
         <Route path="/photographer/:id" element={<PhotographerProfile />} />
         <Route path="/book/:id" element={<PhotographerBooking />} />
-         <Route path="/Customer" element={<Customer />} />
+         <Route path="/customer-status" element={<Customer />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/CustomerChatReceiver" element={<CustomerChatReceiver />}/>
+          <Route path="/payment" element={<Payment />} />
       
       </Routes>
     </>

@@ -207,17 +207,21 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Award className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-blue-600">Rating</h3>
-                  <p className="text-gray-600">View awards and certifications</p>
-                </div>
-              </div>
-            </div>
+      <div
+  className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer"
+  onClick={() => navigate("/payment")}
+>
+  <div className="flex items-center space-x-4">
+    <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+      <Award className="w-6 h-6 text-white" />
+    </div>
+    <div>
+      <h3 className="text-lg font-semibold text-blue-600">Payment</h3>
+      <p className="text-gray-600">View awards and certifications</p>
+    </div>
+  </div>
+</div>
+
 
             <div className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer"
               onClick={() => navigate(`/book/${profile.userId}`)} >

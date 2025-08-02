@@ -113,13 +113,15 @@ if (!token) {
         return;
       }
 
- const data = await response.json();
+const data = await response.json();
 if (data.success) {
-  alert(`✅ ${data.message || 'Booking sent successfully!'}`);
-  setMessage('');
-  setEventType('');
-  navigate('/customer', { state: { bookingStatus: 'Pending' } });
-} else {
+  console.log("📦 Booking ID sent:", data.id); // ✅ Confirming received booking ID
+  alert(data.message || 'Booking sent successfully!');
+  localStorage.setItem("bookingId", data.id); // ✅ store it correctly
+  navigate('/customer-status');
+}
+
+ else {
   alert(` ${data.message || 'Booking failed'}`);
 }
 } catch (err) {

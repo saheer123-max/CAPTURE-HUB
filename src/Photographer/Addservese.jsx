@@ -21,6 +21,7 @@ const AddService = () => {
   const [baseCost, setBaseCost] = useState('');
   const [extraHourCost, setExtraHourCost] = useState('');
   const [minimumAmount, setMinimumAmount] = useState('');
+  const [userId, setUserId] = useState(null)
   const [additionalServices, setAdditionalServices] = useState({
     videography: { selected: false, price: '' },
     editing: { selected: false, price: '' },
@@ -54,7 +55,7 @@ const AddService = () => {
      
         
         const id = decoded.photographerId || decoded.id || decoded.sub; // Adjust based on your token's claim name
-        setPhotographerProfileId(id);
+        setUserId(id);
       } catch (error) {
         console.error('Error decoding token:', error);
         setMessage({ type: 'error', text: 'Invalid token. Please login again.' });
@@ -63,6 +64,8 @@ const AddService = () => {
       setMessage({ type: 'error', text: 'Unauthorized. Please login first.' });
     }
   }, []);
+
+  
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -75,11 +78,11 @@ const AddService = () => {
       return;
     }
 
-    if (!photographerProfileId) {
-      setMessage({ type: 'error', text: 'Photographer ID not found. Please login again.' });
-      setLoading(false);
-      return;
-    }
+ if (!userId) {
+   setMessage({ type: 'error', text: 'User ID not found. Please login again.' });
+   setLoading(false);
+   return;
+}
 
    const payload = {
   serviceName,
@@ -88,6 +91,7 @@ const AddService = () => {
   baseCost: parseInt(baseCost),
   extraHourCost: parseInt(extraHourCost),
   minimumAmount: parseInt(minimumAmount),
+   userId: parseInt(userId),
   contactNumber,
   isAvailable,
   videographyPrice: additionalServices.videography.selected

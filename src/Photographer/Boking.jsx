@@ -31,6 +31,8 @@ function Booking() {
 
   const handleAccept = async (id) => {
     try {
+      console.log("booking id"+id);
+      
       await axios.put(`${backendUrl}/api/booking/${id}/accept`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,

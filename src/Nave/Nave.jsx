@@ -1,7 +1,9 @@
 import React from 'react';
 import { Camera, Calendar, Image, Users, Download } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Nav = ({ activeTab, setActiveTab, gems }) => {
+  const navigate = useNavigate();
   const tabs = [
     {
       name: 'Home',
@@ -32,21 +34,28 @@ const Nav = ({ activeTab, setActiveTab, gems }) => {
       bgColor: 'bg-gradient-to-br from-purple-500 to-purple-600'
     },
     {
-      name: 'Daily Game',
+      name: 'stat',
       hasNotification: true,
       icon: Download,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-gradient-to-br from-orange-500 to-orange-600'
     },
   ];
+const handleTabClick = (name) => {
+  setActiveTab(name);
 
-  const handleTabClick = (name) => {
-    setActiveTab(name);
-    const section = document.getElementById(name);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  if (name === 'stat') {
+    // 👇 replace 123 with dynamic bookingId if needed
+    navigate('/customer-status'); // OR `/customer/${bookingId}`
+    return;
+  }
+
+  const section = document.getElementById(name);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
 
   return (
     <>
@@ -54,7 +63,7 @@ const Nav = ({ activeTab, setActiveTab, gems }) => {
       <div className="hidden lg:block fixed top-0 z-50 w-full p-4">
         <div className="flex justify-center mx-auto">
           <nav className="flex rounded-full bg-[#1e1e1e] w-fit items-center justify-center gap-4 px-6 py-3">
-            {tabs.slice(0, 4).map((tab) => (
+            {tabs.slice(0, 5).map((tab) => (
               <button
                 key={tab.name}
                 onClick={() => handleTabClick(tab.name)}

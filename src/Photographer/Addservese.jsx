@@ -46,26 +46,56 @@ const AddService = () => {
   ];
 
   // Decode JWT token to get photographerProfileId
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    console.log("TOKEN:", token);
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-     
-        
-        const id = decoded.photographerId || decoded.id || decoded.sub; // Adjust based on your token's claim name
-        setUserId(id);
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        setMessage({ type: 'error', text: 'Invalid token. Please login again.' });
-      }
-    } else {
-      setMessage({ type: 'error', text: 'Unauthorized. Please login first.' });
-    }
-  }, []);
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  console.log("TOKEN:", token);
 
-  
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      console.log("✅ Token loaded & currentUser set:", decoded);
+
+      // ✅ ഇവിടെ proper claim URI ഉപയോഗിച്ച് id എടുക്കണം
+      const id = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+      setUserId(id);
+      console.log("📌 Extracted UserId:", id);
+      
+
+    } catch (error) {
+      console.error('Token decode ചെയ്യുമ്പോള്‍ പിഴവ്:', error);
+      setMessage({ type: 'error', text: 'തെറ്റായ ടോക്കണ്‍. ദയവായി വീണ്ടും login ചെയ്യൂ.' });
+    }
+  } else {
+    setMessage({ type: 'error', text: 'അനധികൃത ആക്സസ്. ദയവായി login ചെയ്യൂ.' });
+  }
+}, []);
+
+
+  useEffect(() => {
+  if (userId) {
+    const fetchProfile = async () => {
+      try {
+      const response = await fetch(`https://localhost:7037/api/Photographer/by-user/${userId}`);
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          console.log("📸 Photographer Profile Fetched:", data.data);
+          setPhotographerProfileId(data.data.id); // photographerProfileId set ചെയ്യുന്നു
+        } else {
+          console.error("⚠️ Unable to fetch profile:", data.message);
+          setMessage({ type: 'error', text: 'Profile not found. Please complete your photographer profile.' });
+        }
+      } catch (err) {
+        console.error("📡 Network Error:", err);
+        setMessage({ type: 'error', text: 'Network error while fetching profile.' });
+      }
+    };
+
+    fetchProfile(); // ✅ function call
+  }
+}, [userId]);
+
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -85,13 +115,15 @@ const AddService = () => {
 }
 
    const payload = {
+    photographerProfileId: photographerProfileId,
+
   serviceName,
   description,
   serviceType,
   baseCost: parseInt(baseCost),
   extraHourCost: parseInt(extraHourCost),
   minimumAmount: parseInt(minimumAmount),
-   userId: parseInt(userId),
+ 
   contactNumber,
   isAvailable,
   videographyPrice: additionalServices.videography.selected
@@ -106,7 +138,7 @@ const AddService = () => {
   liveStreamPrice: additionalServices.liveStream.selected
     ? parseInt(additionalServices.liveStream.price || '0')
     : 0,
-  photographerProfileId: parseInt(photographerProfileId) 
+
 };
 
 

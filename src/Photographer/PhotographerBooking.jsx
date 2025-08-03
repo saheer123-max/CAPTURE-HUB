@@ -15,7 +15,7 @@ const PhotographerBooking = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [approvedDates, setApprovedDates] = useState([]); 
-
+const { setBookingId } = useGlobalContext();
 
   useEffect(() => {
     const fetchApproved = async () => {
@@ -115,9 +115,9 @@ if (!token) {
 
 const data = await response.json();
 if (data.success) {
-  console.log("📦 Booking ID sent:", data.id); // ✅ Confirming received booking ID
+ // ✅ Confirming received booking ID
   alert(data.message || 'Booking sent successfully!');
-  localStorage.setItem("bookingId", data.id); // ✅ store it correctly
+  
   navigate('/customer-status');
 }
 

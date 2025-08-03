@@ -13,11 +13,11 @@ const Home = () => {
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
-    navigate('/');
-  };
+ const handleLogout = () => {
+  localStorage.clear();  // 🔥 Clear everything
+  setIsLoggedIn(false);
+  navigate('/');
+};
 
   const sidebarActions = [
     isLoggedIn

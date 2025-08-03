@@ -7,6 +7,7 @@ export const GlobalProvider = ({ children }) => {
   const [token, setToken] = useState("");
   const [currentUser, setCurrentUser] = useState(null);// ✅ New state
   const [targetUser, setTargetUser] = useState(null);   // ✅ New state
+   const [bookingId, setBookingId] = useState(null);
 
   const backendUrl = "https://localhost:7037";
 
@@ -65,6 +66,8 @@ export const GlobalProvider = ({ children }) => {
         setCurrentUser,
         targetUser,
         setTargetUser,
+        bookingId,
+          setBookingId,
       }}
     >
       {children}

@@ -40,10 +40,18 @@ const PhotographerDashboard = () => {
    { name: 'Date', icon: <Import className="w-5 h-5" /> }
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
-  };
+const handleLogout = () => {
+  // 🔐 ✅ Token നീക്കം ചെയ്യുക
+  localStorage.removeItem('token');
+
+  // 💬 ✅ Chat memory clear ചെയ്യുക
+  localStorage.removeItem('selectedTargetUser');
+  localStorage.removeItem('chatCustomers');
+
+  // 🚪 ✅ Login/Home Page-ലേക്ക് redirect ചെയ്യുക
+  navigate('/');
+};
+
 
   const renderContent = () => {
     switch (activeTab) {

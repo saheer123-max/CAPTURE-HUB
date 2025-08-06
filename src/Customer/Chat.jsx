@@ -21,7 +21,43 @@
       const messagesEndRef = useRef(null);
       const location = useLocation();
     
+useEffect(() => {
+  if (!currentUser || !targetUser) return; // ഇങ്ങനെ check ചെയ്യണം
+  const fetchPreviousMessages = async () => {
+    const token = localStorage.getItem("token");
 
+    try {
+      const res = await fetch(`https://localhost:7037/api/Photographer/api/messages/${targetUser.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      const formattedMessages = data.map((msg) => {
+        const isFromCurrentUser = msg.fromUserId === currentUser.id;
+        return {
+          id: msg.id,
+          text: msg.text,
+          timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          sender: isFromCurrentUser
+            ? (isCustomer ? 'customer' : 'photographer')
+            : (isCustomer ? 'photographer' : 'customer'),
+        };
+      });
+
+      setMessages(formattedMessages);
+    } catch (err) {
+      console.error("❌ പഴയ സന്ദേശങ്ങൾ എടുക്കുമ്പോൾ പ്രശ്നം: ", err);
+    }
+  };
+
+  fetchPreviousMessages();
+}, [currentUser, targetUser]);
 
       
       useEffect(() => {
@@ -49,8 +85,38 @@
       }, []);
 
 
-      // ✅ Set targetUser from navigation
 
+
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  const decoded = jwtDecode(token);
+  const userId = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl('https://localhost:7037/chathub', {
+      accessTokenFactory: () => token,
+    })
+    .withAutomaticReconnect()
+    .build();
+
+  connection.start()
+    .then(async () => {
+      console.log("✅ Customer SignalR connected");
+      await connection.invoke("JoinGroup", userId);
+
+      connection.on("ReceiveMessage", (senderId, messageObj) => {
+        console.log("get Photographer message ", messageObj);
+       
+      });
+    })
+    .catch((err) => console.error(" Customer connection error:", err));
+
+  return () => {
+    connection.stop();
+  };
+}, []);
 
 
 
@@ -109,26 +175,30 @@
             newConnection
               .start()
               .then(() => {
-                console.log('✅ SignalR ചാറ്റ് കണക്ഷൻ സജ്ജമാണ്!');
+                console.log(' SignalR chat is active');
                 setIsConnected(true);
 
-                newConnection.on("ReceiveMessage", (senderId, message) => {
-                  if (String(senderId) !== String(currentUser.id)) {
-                    const msg = {
-                      id: Date.now(),
-                      text: message,
-                      timestamp: new Date().toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      }),
-                      sender: isCustomer ? 'photographer' : 'customer',
-                    };
-                    setMessages(prev => [...prev, msg]);
-                  }
-                });
+     newConnection.on("ReceiveMessage", (senderId, message) => {
+  if (String(senderId) !== String(currentUser.id)) {
+    const parsedMessage = typeof message === 'object' ? message.text : message;
+
+    const msg = {
+      id: Date.now(),
+      text: parsedMessage,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      sender: isCustomer ? 'photographer' : 'customer',
+    };
+
+    setMessages(prev => [...prev, msg]);
+  }
+});
+
               })
               .catch(err => {
-                console.error("❌ SignalR കണക്ഷൻ പിശക്:", err);
+                console.error(" SignalR conction erorr", err);
               });
 
             clearInterval(intervalId);
@@ -153,7 +223,13 @@
         text.trim()
       ) {
         try {
-      await connection.invoke("SendMessage", currentUser.id.toString(), targetUser.id.toString(), text);
+    await connection.invoke(
+  "SendMessage",
+  currentUser.id.toString(),
+  targetUser.id.toString(),
+  text // ✅ Just this
+);
+
 
 
 
@@ -172,7 +248,7 @@
           setMessages(prev => [...prev, reply]);
           setText('');
         } catch (e) {
-          console.error("❌ മെസ്സേജ് അയക്കാനായില്ല:", e);
+          console.error("❌ messege couldnt send", e);
         }
       } else {
         console.warn("❌ Connection not ready or message is empty.");
@@ -181,7 +257,7 @@
   useEffect(() => {
     if (location.state?.targetUser) {
       setTargetUser(location.state.targetUser);
-      console.log("🎯 Set targetUser from location.state →", location.state.targetUser);
+      console.log(" Set targetUser from location.state →", location.state.targetUser);
     }
   }, [location.state, setTargetUser]);
 

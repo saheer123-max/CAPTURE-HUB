@@ -32,9 +32,9 @@ function Booking() {
   }, [backendUrl, token]);
 
 const handleAccept = async (id, userId) => {
-  console.log("🟢 Booking Accept ചെയ്യാൻ ശ്രമിക്കുന്നു");
-  console.log("➡️ Booking ID:", id);
-  console.log("➡️ User ID:", userId);
+  console.log(" try to Booking Accept ");
+  console.log(" Booking ID:", id);
+  console.log(" User ID:", userId);
 
   try {
     const acceptResponse = await axios.put(`${backendUrl}/api/booking/${id}/accept`, {}, {
@@ -45,7 +45,7 @@ const handleAccept = async (id, userId) => {
 
     console.log("✅ Booking Accept API Response:", acceptResponse.data);
 
-    // ✅ Notify customer in backend via SignalR
+
     const notifyResponse = await axios.post(`${backendUrl}/api/notify/customer`, {
       bookingId: id,
       userId: userId,

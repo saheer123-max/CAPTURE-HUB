@@ -83,7 +83,7 @@ const handleSubmit = async (e) => {
   } else if (result.paymentIntent.status === 'succeeded') {
     console.log("✅ Payment success:", result.paymentIntent);
 
-    // ✅ Booking payment status backend-ൽ update ചെയ്യുക
+
     const token = localStorage.getItem("token");
     try {
       await axios.put(

@@ -55,7 +55,7 @@ useEffect(() => {
       const decoded = jwtDecode(token);
       console.log("✅ Token loaded & currentUser set:", decoded);
 
-      // ✅ ഇവിടെ proper claim URI ഉപയോഗിച്ച് id എടുക്കണം
+      
       const id = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
       setUserId(id);
       console.log("📌 Extracted UserId:", id);
@@ -63,7 +63,7 @@ useEffect(() => {
 
     } catch (error) {
       console.error('Token decode ചെയ്യുമ്പോള്‍ പിഴവ്:', error);
-      setMessage({ type: 'error', text: 'തെറ്റായ ടോക്കണ്‍. ദയവായി വീണ്ടും login ചെയ്യൂ.' });
+      setMessage({ type: 'error', text: 'eron token' });
     }
   } else {
     setMessage({ type: 'error', text: 'അനധികൃത ആക്സസ്. ദയവായി login ചെയ്യൂ.' });

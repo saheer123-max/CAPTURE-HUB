@@ -17,7 +17,7 @@ const Messages = ({ customerName, customerId }) => {
   }, [messages]);
 
   // TODO: Replace with your actual message receiving logic
-  useEffect(() => {
+  // useEffect(() => {
     // Example: Listen for incoming messages from your backend/SignalR
     // connection.on("ReceiveMessage", (fromUser, message) => {
     //   if (fromUser === customerId) {
@@ -30,7 +30,24 @@ const Messages = ({ customerName, customerId }) => {
     //     setMessages(prev => [...prev, newMsg]);
     //   }
     // });
-  }, [customerId]);
+  // }, [customerId]);
+
+
+
+
+
+  useEffect(() => {
+  const fetchMessages = async () => {
+    const response = await fetch(`${backendUrl}/api/messages/${customerId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+    setMessages(data);
+  };
+
+  fetchMessages();
+}, [customerId]);
+
 
   const sendReply = async () => {
     if (!newMessage.trim()) return;

@@ -91,7 +91,7 @@ const Messages = ({ customerName, customerId }) => {
       {/* Messages Area */}
       <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-900/30...........">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center......justify-center h-full">
             <p className="text-gray-400 text-center">
               Messages from {customerName || 'customer'} will appear here
             </p>
